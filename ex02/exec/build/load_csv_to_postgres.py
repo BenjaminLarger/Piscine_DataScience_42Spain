@@ -25,10 +25,8 @@ class CSVToPostgres:
     return conn
 
   def check_first_column_is_datetime(self):
-      print(f"Checking if first column is datetime: {self.df.columns[0]}")
       first_column = self.df.columns[0]
       if pd.api.types.is_datetime64_any_dtype(self.df[first_column]):
-          print(f"First column {first_column} is already datetime.")
           return True
       else:
           # Try to convert the first column to datetime
