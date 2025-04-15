@@ -32,6 +32,8 @@ class CSVToPostgres:
           return 'FLOAT'
       elif pd.api.types.is_bool_dtype(dtype) or dtype == 'bool':
           return 'BOOLEAN'
+      elif pd.api.types.is_timedelta64_dtype(dtype):
+          return 'INTERVAL'
       else:
           return 'TEXT'
 

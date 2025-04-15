@@ -35,6 +35,8 @@ class CSVToPostgres:
           return 'BOOLEAN'
       elif pd.api.types.is_datetime64_any_dtype(dtype):
           return 'TIMESTAMP'
+      elif pd.api.types.is_timedelta64_dtype(dtype) or 'membership_duration' in column_name.lower():
+        return 'INTERVAL'
       else:
           return 'TEXT'
 
@@ -79,3 +81,7 @@ def main():
   filepath = '/app/build/customer/data_2022_oct.csv'
   a = CSVToPostgres(filepath)
   a.run()
+
+# SELECT column_name, data_type 
+# FROM information_schema.columns 
+# WHERE table_name = 'data_2022_oct';
