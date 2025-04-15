@@ -4,14 +4,12 @@ import psycopg2
 import os
 import time
 from io import StringIO
+from datetime import datetime
 
 class CSVToPostgres:
-  def __init__(self, filepath):
-    self.filepath = filepath
-    self.filename = filepath.split('/')[-1].split('.')[0]
+  def __init__(self):
     self.conn = self.connect_to_postgres()
     self.cur = self.conn.cursor()
-    self.df = pd.read_csv(self.filepath, sep=',', header=0)
 
   def connect_to_postgres(self):
     time.sleep(5)  # Wait for PostgreSQL to be ready
@@ -33,17 +31,14 @@ class CSVToPostgres:
           return 'FLOAT'
       elif pd.api.types.is_bool_dtype(dtype):
           return 'BOOLEAN'
-      elif pd.api.types.is_datetime64_any_dtype(dtype):
-          return 'TIMESTAMP'
       else:
           return 'TEXT'
 
-  def get_column_types(self, has_headers=True):
+  def get_column_types(self):
       try:
           column_types = {}
       
           for column in self.df.columns:
-
               inferred_type = self.pandas_to_postgres(self.df[column].dtype, column)
               column_types[column] = inferred_type
           return (True, column_types)
@@ -51,7 +46,7 @@ class CSVToPostgres:
           return (False, str(e))
 
   def create_table(self, column_types):
-    mysql_command = f"CREATE TABLE IF NOT EXISTS {self.filename} ("
+    mysql_command = f"CREATE TABLE {self.filename} ("
     for column, dtype in column_types.items():
         mysql_command += f"{column} {dtype}, "
     mysql_command = mysql_command.rstrip(', ') + ");"
@@ -65,17 +60,30 @@ class CSVToPostgres:
       self.cur.copy_expert(copy_sql, f)
     self.conn.commit()
 
+
   def run(self):
+    for filename in os.listdir('/app/build/items/'):
+      if not filename.endswith('.csv'):
+          continue
+      self.filepath = os.path.join('/app/build/items/', filename)
+      self.filename = filename.split('.')[0]
+      self.df = pd.read_csv(self.filepath, sep=',')
+      # convert first column to datetime
+      try:
+          self.df.iloc[:, 0] = pd.to_datetime(self.df.iloc[:, 0], format='%Y-%m-%d %H:%M:%S', errors='coerce')
+      except Exception as e:
+          print(f"Error converting first column to datetime: {e}")
+      # self.df['timestamp'] = pd.to_datetime(self.df['timestamp'], format='%Y-%m-%d %H:%M:%S', errors='coerce')
       success, column_types = self.get_column_types()
       if success:
           self.create_table(column_types)
-          self.copy_from_csv()    
+          self.copy_from_csv()
+          
       else:
           print(f"Error inferring column types: {column_types}")
-      self.cur.close()
-      self.conn.close()
+    self.cur.close()
+    self.conn.close()
 
 def main():
-  filepath = '/app/build/customer/data_2022_oct.csv'
-  a = CSVToPostgres(filepath)
+  a = CSVToPostgres()
   a.run()
