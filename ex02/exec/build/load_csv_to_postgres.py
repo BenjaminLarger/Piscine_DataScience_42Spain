@@ -24,8 +24,23 @@ class CSVToPostgres:
     )
     return conn
 
+  def check_first_column_is_datetime(self):
+      print(f"Checking if first column is datetime: {self.df.columns[0]}")
+      first_column = self.df.columns[0]
+      if pd.api.types.is_datetime64_any_dtype(self.df[first_column]):
+          print(f"First column {first_column} is already datetime.")
+          return True
+      else:
+          # Try to convert the first column to datetime
+          try:
+              print(f"Converting first column {first_column} to datetime.")
+              self.df[first_column] = pd.to_datetime(self.df[first_column], format='%Y-%m-%d %H:%M:%S')
+              return True
+          except Exception as e:
+              return False
+
   def pandas_to_postgres(self, dtype, column_name):
-      if column_name == self.df.columns[0] or pd.api.types.is_datetime64_any_dtype(dtype):  # Force DATETIME for first column
+      if column_name == self.df.columns[0]:
           return 'TIMESTAMP'
       if pd.api.types.is_integer_dtype(dtype):
           return 'INTEGER'
@@ -43,13 +58,12 @@ class CSVToPostgres:
   def get_column_types(self, has_headers=True):
       try:
           column_types = {}
-      
           for column in self.df.columns:
-
               inferred_type = self.pandas_to_postgres(self.df[column].dtype, column)
               column_types[column] = inferred_type
           return (True, column_types)
       except pd.errors.ParserError:
+          print(f"Error parsing CSV file: {self.filepath}")
           return (False, str(e))
 
   def create_table(self, column_types):
@@ -68,6 +82,8 @@ class CSVToPostgres:
     self.conn.commit()
 
   def run(self):
+      if self.check_first_column_is_datetime() == False:
+        return
       success, column_types = self.get_column_types()
       if success:
           self.create_table(column_types)
