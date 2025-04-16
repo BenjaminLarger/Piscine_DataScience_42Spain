@@ -12,6 +12,10 @@ class CSVToPostgres:
     self.has_int = True
     self.has_text = True
     self.table_name = 'customers'
+    cur_dir = os.path.dirname(os.path.abspath(__file__))
+    self.csv_dir = os.path.join(cur_dir, 'customers')
+    if not os.path.exists(self.csv_dir):
+        os.makedirs(self.csv_dir)
     
   def connect_to_postgres(self):
     time.sleep(5)  # Wait for PostgreSQL to be ready
@@ -93,8 +97,8 @@ class CSVToPostgres:
   def run(self):
     df_list = []
     table = None
-    for filename in os.listdir('/app/build/customer/'):
-      self.filepath = os.path.join('/app/build/customer/', filename)
+    for filename in os.listdir(self.csv_dir):
+      self.filepath = os.path.join(self.csv_dir, filename)
       self.filename = filename.split('.')[0]
       self.df = pd.read_csv(self.filepath, sep=',')
       print(f"{filename} has been read")
@@ -107,8 +111,8 @@ class CSVToPostgres:
       else:
         continue
     if df_list:
-      customer_df = pd.concat(df_list, ignore_index=True)
-      self.insert_df_to_postgres(customer_df)
+      customers_df = pd.concat(df_list, ignore_index=True)
+      self.insert_df_to_postgres(customers_df)
       self.conn.commit()
       print(f"END: Data from {self.filename} has been inserted into {self.table_name} table.")
     self.cur.close()

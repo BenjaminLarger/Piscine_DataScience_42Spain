@@ -1,10 +1,7 @@
 import pandas as pd
-import re
 import psycopg2
 import os
 import time
-from io import StringIO
-from datetime import datetime
 
 class CSVToPostgres:
   def __init__(self):
@@ -23,24 +20,7 @@ class CSVToPostgres:
     )
     return conn
 
-  def check_first_column_is_datetime(self):
-      first_column = self.df.columns[0]
-      if pd.api.types.is_datetime64_any_dtype(self.df[first_column]):
-          return True
-      else:
-          # Try to convert the first column to datetime
-          try:
-            print(f"Converting first column {first_column} to datetime.")
-            self.df[first_column] = pd.to_datetime(self.df[first_column], format='%Y-%m-%d %H:%M:%S', errors='coerce')
-            print(f"First column {first_column} converted to datetime.")
-            return True
-          except Exception as e:
-              print(f"Error converting first column to datetime: {e}")
-              return False
-
   def pandas_to_postgres(self, dtype, column_name):
-      if column_name == self.df.columns[0]:
-          return 'TIMESTAMP'
       if pd.api.types.is_integer_dtype(dtype):
           return 'INTEGER'
       elif pd.api.types.is_float_dtype(dtype):
@@ -61,7 +41,7 @@ class CSVToPostgres:
               inferred_type = self.pandas_to_postgres(self.df[column].dtype, column)
               column_types[column] = inferred_type
           return (True, column_types)
-      except pd.errors.ParserError:
+      except pd.errors.ParserError as e:
           print(f"Error parsing CSV file: {self.filepath}")
           return (False, str(e))
 
@@ -86,7 +66,8 @@ class CSVToPostgres:
       self.filepath = os.path.join('/app/build/items/', filename)
       self.filename = filename.split('.')[0]
       self.df = pd.read_csv(self.filepath, sep=',')
-      if not filename.endswith('.csv') or self.check_first_column_is_datetime() == False:
+      if not filename.endswith('.csv'):
+          print(f"Skipping non-CSV file: {filename}")
           continue
       success, column_types = self.get_column_types()
       if success:

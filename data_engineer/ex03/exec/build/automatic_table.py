@@ -17,7 +17,7 @@ class CSVToPostgres:
         host=os.getenv("PGHOST", "172.18.0.2"),
         dbname=os.getenv("POSTGRES_DB", "piscineds"),
         user=os.getenv("POSTGRES_USER", "blarger"),
-        password=os.getenv("POSTGRES_PASSWORD", "your_password"),
+        password=os.getenv("POSTGRES_PASSWORD", "mysecretpassword"),
         port=5432
     )
     return conn
