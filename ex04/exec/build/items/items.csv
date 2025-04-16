@@ -1,6 +1,0 @@
-customer_id,name,is_active,amount_spent,birthdate,Age
-1001,Alice,true,120.50,1992-07-15,17
-1002,Bob,false,75.00,1988-11-03,19
-1003,Charlie,true,200.99,1995-01-22,15
-1004,Diana,true,0.00,2000-05-30,16
-1005,Evan,false,58.75,1999-02-10,17
