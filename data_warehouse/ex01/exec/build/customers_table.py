@@ -3,8 +3,6 @@ import re
 import psycopg2
 import os
 import time
-from io import StringIO
-from datetime import datetime
 from psycopg2.extras import execute_values
 
 class CSVToPostgres:
@@ -21,7 +19,7 @@ class CSVToPostgres:
         host=os.getenv("PGHOST", "postgres"),
         dbname=os.getenv("POSTGRES_DB", "piscineds"),
         user=os.getenv("POSTGRES_USER", "blarger"),
-        password=os.getenv("POSTGRES_PASSWORD", "your_password"),
+        password=os.getenv("POSTGRES_PASSWORD", "mysecretpassword"),
         port=5432
     )
     return conn
@@ -108,13 +106,17 @@ class CSVToPostgres:
         table = self.create_table(column_types)
       else:
         continue
-    customer_df = pd.concat(df_list, ignore_index=True)
-    self.insert_df_to_postgres(customer_df)
-    self.conn.commit()
+    if df_list:
+      customer_df = pd.concat(df_list, ignore_index=True)
+      self.insert_df_to_postgres(customer_df)
+      self.conn.commit()
+      print(f"END: Data from {self.filename} has been inserted into {self.table_name} table.")
     self.cur.close()
     self.conn.close()
-    print(f"END: Data from {self.filename} has been inserted into {self.table_name} table.")
 
 def main():
   a = CSVToPostgres()
   a.run()
+
+if __name__ == "__main__":
+  main()

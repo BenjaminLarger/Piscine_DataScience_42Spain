@@ -61,21 +61,20 @@ class CSVToPostgres:
     self.conn.close()
   
   def run(self):
-    customer_df = self.get_df_from_table()
-    datetime_column = customer_df.columns[0]
+    # customer_df = self.get_df_from_table()
+    # datetime_column = customer_df.columns[0]
 
-    customer_df = customer_df.drop_duplicates()
-    key_columns = customer_df.columns[1:]
-    customer_df = self.remove_near_duplicate(customer_df, key_columns, datetime_column)
-    self.cur.execute("DELETE FROM customers;")
+    # customer_df = customer_df.drop_duplicates()
+    # key_columns = customer_df.columns[1:]
+    # customer_df = self.remove_near_duplicate(customer_df, key_columns, datetime_column)
+    self.cur.execute("delete from customers")
     self.conn.commit()
-    print(f"Deleted all records from {self.table_name}.")
-    try:
-      self.insert_df_to_postgres(customer_df)
-      print(f"END: Removed duplicates and inserted {len(customer_df)} records into {self.table_name}.")
-    except Exception as e:
-      print(f"Error inserting data: {e}")
-    self.end_postgres_connection()
+    # try:
+    #   self.insert_df_to_postgres(customer_df)
+    #   print(f"END: Removed duplicates and inserted {len(customer_df)} records into {self.table_name}.")
+    # except Exception as e:
+    #   print(f"Error inserting data: {e}")
+    # self.end_postgres_connection()
 
 def main():
   print("START: Removing duplicates from customers table.")

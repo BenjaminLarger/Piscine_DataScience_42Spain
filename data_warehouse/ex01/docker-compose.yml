@@ -10,6 +10,8 @@ services:
     env_file: .env
     ports:
       - '8080:8080'
+    networks:
+      - app_network
     expose:
       - 8080
     depends_on:
@@ -33,6 +35,13 @@ services:
       PGHOST: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
 
 volumes:
   postgres_data:
+
+networks:
+  app_network:
+    name: app_network
+    driver: bridge

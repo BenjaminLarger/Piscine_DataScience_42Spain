@@ -1,5 +1,4 @@
 import pandas as pd
-import re
 import psycopg2
 import os
 import time
@@ -15,15 +14,13 @@ class CSVToPostgres:
     
   def connect_to_postgres(self):
     time.sleep(5)  # Wait for PostgreSQL to be ready
-    print("Connecting to PostgreSQL...")
     conn = psycopg2.connect(
-        host=os.getenv("PGHOST", "postgres"),
+        host="127.0.0.1",
         dbname=os.getenv("POSTGRES_DB", "piscineds"),
         user=os.getenv("POSTGRES_USER", "blarger"),
-        password=os.getenv("POSTGRES_PASSWORD", "your_password"),
+        password=os.getenv("POSTGRES_PASSWORD", "mysecretpassword"),
         port=5432
     )
-    print(f"Connected to PostgreSQL database: {os.getenv('POSTGRES_DB', 'piscineds')}")
     return conn
 
   def get_df_from_table(self):
@@ -42,7 +39,6 @@ class CSVToPostgres:
     df['prev_datetime'] = df.groupby(key_columns)[datetime_column].shift()
     df['delta'] = (df[datetime_column] - df['prev_datetime']).dt.total_seconds()
     df = df[ (df['delta'].isna()) | (df['delta'] > 1) ]
-    
     df = df.drop(columns=['prev_datetime', 'delta'])
     return df
 
@@ -67,9 +63,7 @@ class CSVToPostgres:
     customer_df = customer_df.drop_duplicates()
     key_columns = customer_df.columns[1:]
     customer_df = self.remove_near_duplicate(customer_df, key_columns, datetime_column)
-    self.cur.execute("DELETE FROM customers;")
-    self.conn.commit()
-    print(f"Deleted all records from {self.table_name}.")
+    self.cur.execute("TRUNCATE TABLE customers;")
     try:
       self.insert_df_to_postgres(customer_df)
       print(f"END: Removed duplicates and inserted {len(customer_df)} records into {self.table_name}.")
@@ -78,9 +72,10 @@ class CSVToPostgres:
     self.end_postgres_connection()
 
 def main():
-  print("START: Removing duplicates from customers table.")
   a = CSVToPostgres()
   a.run()
 
 if __name__ == "__main__":
+
+  os.environ["PGHOST"] = "postgres"
   main()

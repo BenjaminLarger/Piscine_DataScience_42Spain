@@ -6,6 +6,8 @@ services:
     container_name: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
     expose:
       - 5432
     working_dir: /var/lib/postgresql/data

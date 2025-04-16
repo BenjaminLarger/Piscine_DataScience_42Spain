@@ -18,5 +18,13 @@ services:
       POSTGRES_INITDB_ARGS: --data-checksums
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
 volumes:
   postgres_data:
+
+networks:
+  app_network:
+    name: app_network
+    driver: bridge
