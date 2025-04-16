@@ -17,7 +17,7 @@ class CSVToPostgres:
     time.sleep(5)  # Wait for PostgreSQL to be ready
     print("Connecting to PostgreSQL...")
     conn = psycopg2.connect(
-        host=os.getenv("PGHOST", "postgres"),
+        host=os.getenv("PGHOST", "172.18.0.2"),
         dbname=os.getenv("POSTGRES_DB", "piscineds"),
         user=os.getenv("POSTGRES_USER", "blarger"),
         password=os.getenv("POSTGRES_PASSWORD", "your_password"),

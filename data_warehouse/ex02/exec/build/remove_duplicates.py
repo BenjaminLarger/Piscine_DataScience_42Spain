@@ -17,7 +17,7 @@ class CSVToPostgres:
     time.sleep(5)  # Wait for PostgreSQL to be ready
     print("Connecting to PostgreSQL...")
     conn = psycopg2.connect(
-        host=os.getenv("PGHOST", "postgres"),
+        host=os.getenv("PGHOST", "172.18.0.2"),
         dbname=os.getenv("POSTGRES_DB", "piscineds"),
         user=os.getenv("POSTGRES_USER", "blarger"),
         password=os.getenv("POSTGRES_PASSWORD", "your_password"),
@@ -84,3 +84,29 @@ def main():
 
 if __name__ == "__main__":
   main()
+
+
+# WITH ranked AS (
+#   SELECT 
+#     *,
+#     LAG(event_time) OVER (PARTITION BY user_id, user_session, event_type, product_id ORDER BY event_time) AS prev_event_time
+#   FROM customers
+# )
+# SELECT *
+# FROM ranked
+# WHERE prev_event_time IS NOT NULL
+#   AND EXTRACT(EPOCH FROM (event_time - prev_event_time)) <= 1;
+
+# SELECT COUNT(*) FROM (
+#   -- same CTE as above
+#   WITH ranked AS (
+#     SELECT 
+#       *,
+#       LAG(event_time) OVER (PARTITION BY user_id, user_session, event_type, product_id ORDER BY event_time) AS prev_event_time
+#     FROM customers
+#   )
+#   SELECT *
+#   FROM ranked
+#   WHERE prev_event_time IS NOT NULL
+#     AND EXTRACT(EPOCH FROM (event_time - prev_event_time)) <= 1
+# ) AS duplicates;
