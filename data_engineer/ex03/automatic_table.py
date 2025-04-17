@@ -7,8 +7,6 @@ class CSVToPostgres:
   def __init__(self):
     self.conn = self.connect_to_postgres()
     self.cur = self.conn.cursor()
-    self.has_int = True
-    self.has_text = True
     cur_dir = os.path.dirname(os.path.abspath(__file__))
     self.csv_dir = os.path.join(cur_dir, 'customer')
     if not os.path.exists(self.csv_dir):
@@ -73,7 +71,6 @@ class CSVToPostgres:
           return (False, str(e))
 
   def create_table(self, column_types):
-    self.cur.execute(f"DROP TABLE IF EXISTS {self.filename};")
     mysql_command = f"CREATE TABLE {self.filename} ("
     for column, dtype in column_types.items():
         mysql_command += f"{column} {dtype}, "
@@ -92,6 +89,8 @@ class CSVToPostgres:
   def run(self):
     
     for filename in os.listdir(self.csv_dir):
+      self.has_int = True
+      self.has_text = True
       self.filepath = os.path.join(self.csv_dir, filename)
       self.filename = filename.split('.')[0]
       self.df = pd.read_csv(self.filepath, sep=',')
