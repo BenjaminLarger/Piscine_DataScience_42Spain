@@ -16,5 +16,3 @@ postgres:
 test_postgres:
 	docker exec -it postgres sh \
 		-c "psql -U blarger -d piscineds -h localhost -W"
-restart_exec:
-	docker-compose restart exec

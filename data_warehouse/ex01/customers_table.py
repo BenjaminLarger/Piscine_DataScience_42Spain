@@ -1,5 +1,4 @@
 import pandas as pd
-import re
 import psycopg2
 import os
 import time
@@ -19,31 +18,19 @@ class CSVToPostgres:
     
   def connect_to_postgres(self):
     time.sleep(5)  # Wait for PostgreSQL to be ready
+    print("Connecting to PostgreSQL...")
     conn = psycopg2.connect(
-        host=os.getenv("PGHOST", "172.18.0.2"),
+        host=os.getenv("PGHOST", "localhost"),
         dbname=os.getenv("POSTGRES_DB", "piscineds"),
         user=os.getenv("POSTGRES_USER", "blarger"),
         password=os.getenv("POSTGRES_PASSWORD", "mysecretpassword"),
         port=5432
     )
+    print(f"Connected to PostgreSQL database: {os.getenv('POSTGRES_DB', 'piscineds')}")
     return conn
 
-  def check_first_column_is_datetime(self):
-      first_column = self.df.columns[0]
-      if pd.api.types.is_datetime64_any_dtype(self.df[first_column]):
-          return True
-      else:
-          # Try to convert the first column to datetime
-          try:
-              print(f"Converting first column {first_column} to datetime.")
-              self.df[first_column] = pd.to_datetime(self.df[first_column], infer_datetime_format=True, errors='coerce')
-              return True
-          except Exception as e:
-            print(f"Error converting first column to datetime: {e}")
-            return False
-
-  def pandas_to_postgres(self, dtype, column_name):
-      if column_name == self.df.columns[0]:
+  def pandas_to_postgres(self, dtype, column_name, df):
+      if column_name == df.columns[0]:
           return 'TIMESTAMP'
       elif pd.api.types.is_integer_dtype(dtype) and self.has_int == True:
           self.has_int = False
@@ -56,7 +43,6 @@ class CSVToPostgres:
           return 'TIMESTAMP'
       elif pd.api.types.is_timedelta64_dtype(dtype) or 'membership_duration' in column_name.lower():
         return 'INTERVAL'
-      # Identify bigint
       elif pd.api.types.is_integer_dtype(dtype):
           return 'BIGINT'
       elif pd.api.types.is_string_dtype(dtype) and self.has_text == True:
@@ -65,14 +51,14 @@ class CSVToPostgres:
       else:
           return 'TEXT'
 
-  def get_column_types(self, has_headers=True):
+  def get_column_types(self, df):
       try:
           column_types = {}
-          for column in self.df.columns:
-              inferred_type = self.pandas_to_postgres(self.df[column].dtype, column)
+          for column in df.columns:
+              inferred_type = self.pandas_to_postgres(df[column].dtype, column, df)
               column_types[column] = inferred_type
           return (True, column_types)
-      except pd.errors.ParserError:
+      except pd.errors.ParserError as e:
           print(f"Error parsing CSV file: {self.filepath}")
           return (False, str(e))
 
@@ -83,6 +69,7 @@ class CSVToPostgres:
     mysql_command = mysql_command.rstrip(', ') + ");"
     self.cur.execute(mysql_command)
     self.conn.commit()
+    print(f"Table {self.table_name} created with columns: {', '.join(column_types.keys())}")
     return True
 
   def insert_df_to_postgres(self, customers_df):
@@ -91,32 +78,44 @@ class CSVToPostgres:
 
     query = f"INSERT INTO {self.table_name} ({columns}) VALUES %s"
     print(f"insert query : {query}")
-    print(f"data_tuples : {data_tuples}")
     execute_values(self.cur, query, data_tuples)
+    print(f"Inserted {len(data_tuples)} records into {self.table_name}.")
+  
+  def get_df_from_table(self, table_name):
+    query = f"SELECT * FROM {table_name};"
+    df = pd.read_sql_query(query, self.conn)
+    return df
 
-  def run(self):
-    df_list = []
-    table = None
-    for filename in os.listdir(self.csv_dir):
-      self.filepath = os.path.join(self.csv_dir, filename)
-      self.filename = filename.split('.')[0]
-      self.df = pd.read_csv(self.filepath, sep=',')
-      print(f"{filename} has been read")
-      if not filename.endswith('.csv') or self.check_first_column_is_datetime() == False:
-          continue
-      success, column_types = self.get_column_types()
-      if success and table is None:
-        df_list.append(self.df)
-        table = self.create_table(column_types)
-      else:
-        continue
-    if df_list:
-      customers_df = pd.concat(df_list, ignore_index=True)
-      self.insert_df_to_postgres(customers_df)
-      self.conn.commit()
-      print(f"END: Data from {self.filename} has been inserted into {self.table_name} table.")
+  def close_postgres_connection(self):
     self.cur.close()
     self.conn.close()
+    print("PostgreSQL connection closed.")
+
+  def get_tables_names(self):
+    self.cur.execute("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE 'data_202%_%';")
+    tables = self.cur.fetchall()
+    return [table[0] for table in tables]
+
+  def run(self):
+    data_tables = self.get_tables_names()
+    table_created = False
+    print(f"data_tables found: {data_tables}")
+    for table in data_tables:
+      df = self.get_df_from_table(table)
+      print(f"Data from {table} has been read")
+      success, column_types = self.get_column_types(df)
+      if success and table_created is False:
+        table = self.create_table(column_types)
+        self.conn.commit()
+        print(f"Table {self.table_name} created.")
+      if table and success:
+        self.insert_df_to_postgres(df)
+        print(f"Data from {table} has been inserted into {self.table_name} table.")
+      else:
+        print(f"Error creating table {self.table_name}.")
+        self.close_postgres_connection()
+    self.conn.commit()
+    self.close_postgres_connection()
 
 def main():
   a = CSVToPostgres()

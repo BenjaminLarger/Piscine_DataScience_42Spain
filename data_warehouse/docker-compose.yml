@@ -2,21 +2,6 @@ name: piscine_data-science
 
 services:
 
-  exec:
-    build:
-      context: ./exec
-      dockerfile: Dockerfile
-    container_name: exec
-    env_file: .env
-    ports:
-      - '8080:8080'
-    networks:
-      - app_network
-    expose:
-      - 8080
-    depends_on:
-      - postgres
-
   postgres:
     image: postgres:16.4-alpine3.20
     container_name: postgres
