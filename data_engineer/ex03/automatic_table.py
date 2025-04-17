@@ -73,6 +73,7 @@ class CSVToPostgres:
           return (False, str(e))
 
   def create_table(self, column_types):
+    self.cur.execute(f"DROP TABLE IF EXISTS {self.filename};")
     mysql_command = f"CREATE TABLE {self.filename} ("
     for column, dtype in column_types.items():
         mysql_command += f"{column} {dtype}, "

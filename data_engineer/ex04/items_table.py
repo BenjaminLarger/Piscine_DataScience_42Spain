@@ -11,6 +11,7 @@ class CSVToPostgres:
     self.has_text = True
     cur_dir = os.path.dirname(os.path.abspath(__file__))
     self.csv_dir = os.path.join(cur_dir, 'items')
+    self.table = 'items'
     if not os.path.exists(self.csv_dir):
         os.makedirs(self.csv_dir)
 
@@ -53,12 +54,13 @@ class CSVToPostgres:
               inferred_type = self.pandas_to_postgres(self.df[column].dtype, column)
               column_types[column] = inferred_type
           return (True, column_types)
-      except pd.errors.ParserError:
+      except pd.errors.ParserError as e:
           print(f"Error parsing CSV file: {self.filepath}")
           return (False, str(e))
 
   def create_table(self, column_types):
-    mysql_command = f"CREATE TABLE {self.filename} ("
+    self.cur.execute(f"DROP TABLE IF EXISTS {self.table};")
+    mysql_command = f"CREATE TABLE {self.table} ("
     for column, dtype in column_types.items():
         mysql_command += f"{column} {dtype}, "
     mysql_command = mysql_command.rstrip(', ') + ");"
@@ -67,7 +69,7 @@ class CSVToPostgres:
     return mysql_command
 
   def copy_from_csv(self):
-    copy_sql = f"COPY {self.filename} FROM STDIN WITH CSV HEADER"
+    copy_sql = f"COPY {self.table} FROM STDIN WITH CSV HEADER"
     with open(self.filepath, 'r') as f:
       self.cur.copy_expert(copy_sql, f)
     self.conn.commit()

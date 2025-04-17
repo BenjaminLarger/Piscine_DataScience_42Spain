@@ -20,7 +20,7 @@ class CSVToPostgres:
         host=os.getenv("PGHOST", "localhost"),
         dbname=os.getenv("POSTGRES_DB", "piscineds"),
         user=os.getenv("POSTGRES_USER", "blarger"),
-        password=os.getenv("POSTGRES_PASSWORD", "your_password"),
+        password=os.getenv("POSTGRES_PASSWORD", "mysecretpassword"),
         port=5432
     )
     print(f"Connected to PostgreSQL database: {os.getenv('POSTGRES_DB', 'piscineds')}")
@@ -32,19 +32,15 @@ class CSVToPostgres:
     return df
 
   def remove_near_duplicate(self, df, key_columns, datetime_column):
-    if isinstance(key_columns, pd.Index):
-        print(f"key_columns is pd.Index : {key_columns}")
-        key_columns = key_columns.tolist()
-
     print(f"key columns : {key_columns}, {all(col in df.columns for col in key_columns)}, {datetime_column} type : {type(datetime_column)}")
     df[datetime_column] = pd.to_datetime(df[datetime_column])
     df = df.sort_values(by=datetime_column)
     df['prev_datetime'] = df.groupby(key_columns)[datetime_column].shift()
     df['delta'] = (df[datetime_column] - df['prev_datetime']).dt.total_seconds()
-    df = df[ (df['delta'].isna()) | (df['delta'] > 1) ]
-    
-    df = df.drop(columns=['prev_datetime', 'delta'])
-    return df
+    new_df = df[ (df['delta'].isna()) | (df['delta'] > 1) ]
+    print(f"Number of duplicates removed: {len(df) - len(new_df)}")
+    new_df = df.drop(columns=['prev_datetime', 'delta'])
+    return new_df
 
   def insert_df_to_postgres(self, customers_df):
     data_tuples = [tuple(x) for x in customers_df.to_numpy()]
@@ -66,7 +62,7 @@ class CSVToPostgres:
 
     customers_df = customers_df.drop_duplicates()
     key_columns = customers_df.columns[1:]
-    customers_df = self.remove_near_duplicate(customers_df, key_columns, datetime_column)
+    customers_df = self.remove_near_duplicate(customers_df, key_columns.tolist(), datetime_column)
     self.cur.execute("delete from customers")
     self.conn.commit()
     try:

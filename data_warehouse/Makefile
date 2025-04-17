@@ -18,3 +18,9 @@ test_postgres:
 		-c "psql -U blarger -d piscineds -h localhost -W"
 restart_exec:
 	docker-compose restart exec
+execute_customers_table:
+	python3.10 ex01/customers_table.py
+execute_remove_dupliactes:
+	python3.10 ex02/remove_duplicates.py
+execute_fusion:
+	python3.10 ex03/fusion.py

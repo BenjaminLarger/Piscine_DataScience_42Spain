@@ -16,3 +16,7 @@ postgres:
 test_postgres:
 	docker exec -it postgres sh \
 		-c "psql -U blarger -d piscineds -h localhost -W"
+execute_automatic_tables:
+	python3.10 ex03/automatic_tables.py
+execute_items_table:
+	python3.10 ex04/items_table.py
