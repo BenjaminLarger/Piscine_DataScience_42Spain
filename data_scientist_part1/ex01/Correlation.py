@@ -8,7 +8,9 @@ class Histogram:
     self.conn = self.connect_to_postgres()
     self.cur = self.conn.cursor()
     cur_dir = os.path.dirname(os.path.abspath(__file__))
-    self.csv_dir = os.path.join(cur_dir, 'sources/')
+    parent_dir = os.path.dirname(cur_dir)
+    print(f"Parent directory: {parent_dir}")
+    self.csv_dir = os.path.join(parent_dir, 'sources/')
     self.table = 'items'
     if not os.path.exists(self.csv_dir):
         os.makedirs(self.csv_dir)
