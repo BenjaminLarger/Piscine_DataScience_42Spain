@@ -3,7 +3,7 @@ import os
 import psycopg2
 import matplotlib.pyplot as plt
 
-class Points:
+class Standardization:
   def __init__(self):
     self.conn = self.connect_to_postgres()
     self.cur = self.conn.cursor()
@@ -74,7 +74,7 @@ class Points:
     self.plot_undifferentiated_knight(df_test, self.weak_features)
 
 def main():
-  a = Points()
+  a = Standardization()
   a.run()
 
 if __name__ == "__main__":
