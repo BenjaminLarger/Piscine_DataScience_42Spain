@@ -1,11 +1,10 @@
 import pandas as pd
 import os
-import matplotlib.pyplot as plt
-from scipy.stats import pointbiserialr
-import seaborn as sb
 from sklearn import preprocessing
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+from statsmodels.tools.tools import add_constant
 
-class Heatmap:
+class FeatureSelection:
   def __init__(self):
     cur_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(cur_dir)
@@ -41,33 +40,42 @@ class Heatmap:
     print(f"clean_txt_file Array: {array}")
     return array
 
-  def compute_correlations(self, df, target='knight'):
-        correlations = {}
-        for col in df.columns:
-            if pd.api.types.is_numeric_dtype(df[col]):
-                corr, _ = pointbiserialr(df[col], df[target])
-                correlations[col] = corr
-        return sorted(correlations.items(), key=lambda x: abs(x[1]), reverse=True)
-
-  def plot_correlation_heatmap(self, df):
-    corr = df.corr()
-    sb.heatmap(corr, annot=False, cmap='coolwarm')
-    plt.title("Correlation Heatmap")
-    plt.show()
-    print("HEOEMAP")
+  def select_features(self, sorted_variances, total_variance):
+    explained = 0
+    num_components = 0
+    explained_variances = []
+    for var in sorted_variances:
+         explained += var
+         num_components += 1
+         explained_variances.append(explained / total_variance)
+         print(f"Explained variance: {explained / total_variance:.2%}")
+    return num_components, explained_variances
 
   def run(self):
-    df_train = pd.read_csv(self.filepath_train, sep=',')
-
     try:
+        df_train = pd.read_csv(self.filepath_train, sep=',')
         df_train['knight'] = df_train['knight'].map({'Sith': 1, 'Jedi': 0})
-        df_train_norm = self.normalize_df(df_train)
-        self.plot_correlation_heatmap(df_train_norm)
+
+        # The independent variable set
+        X = df_train.drop(columns=['knight'])
+        X = add_constant(X)
+        # VIF datafram
+        vif_df = pd.DataFrame()
+        vif_df['features'] = X.columns
+
+        # Caluclatinf VIF for each feature
+        vif_df['VIF'] = [variance_inflation_factor(X.values, i)
+                            for i in range(len(X.columns))]
+        print(f"VIF DataFrame: \n{vif_df}")
+
+        # Keep only the features that the VIF is less than 5
+        selected_features = vif_df[vif_df['VIF'] < 5]['features'].tolist()
+        print(f"Selected features: {selected_features}")
     except Exception as e:
       print(f"Error: {e}")
 
 def main():
-  a = Heatmap()
+  a = FeatureSelection()
   a.run()
 
 if __name__ == "__main__":

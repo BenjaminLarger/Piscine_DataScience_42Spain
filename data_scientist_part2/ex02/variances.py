@@ -1,16 +1,10 @@
 import pandas as pd
 import os
-import psycopg2
-import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import pointbiserialr
-import seaborn as sb
 from sklearn import preprocessing
 
 class Variances:
   def __init__(self):
-    self.conn = self.connect_to_postgres()
-    self.cur = self.conn.cursor()
     cur_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(cur_dir)
     self.csv_dir = os.path.join(parent_dir, 'sources/')
@@ -27,23 +21,6 @@ class Variances:
     self.filepath_train = os.path.join(self.csv_dir, self.filename_train)
     self.filepath_pred = os.path.join(self.csv_dir, self.filename_prediction)
     self.filepath_truth = os.path.join(self.csv_dir, self.filename_truth)
-
-  def connect_to_postgres(self):
-    conn = psycopg2.connect(
-        host=os.getenv("PGHOST", "localhost"),
-        dbname=os.getenv("POSTGRES_DB", "piscineds"),
-        user=os.getenv("POSTGRES_USER", "blarger"),
-        password=os.getenv("POSTGRES_PASSWORD", "mysecretpassword"),
-        port=5432
-    )
-    return conn
-  
-  def close_connection(self):
-    if self.cur:
-        self.cur.close()
-    if self.conn:
-        self.conn.close()
-    print("PostgreSQL connection closed.")
 
 
   def normalize_df(self, df):
@@ -65,13 +42,24 @@ class Variances:
   def select_features(self, sorted_variances, total_variance):
     explained = 0
     num_components = 0
+    explained_variances = []
     for var in sorted_variances:
          explained += var
          num_components += 1
+         explained_variances.append(explained / total_variance)
          print(f"Explained variance: {explained / total_variance:.2%}")
-         if explained / total_variance >= 0.9:
-             break
-    return num_components
+    return num_components, explained_variances
+
+  def plot_selected_variances(self, explained_variances, num_components):
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, num_components + 1), explained_variances, marker='o', linestyle='--')
+    plt.title('Explained Variance by Number of Components')
+    plt.xlabel('Number of Components')
+    plt.ylabel('Cumulative Explained Variance')
+    plt.axhline(y=0.9, color='r', linestyle='--', label='90% Explained Variance')
+    plt.legend()
+    plt.grid()
+    plt.show()
 
   def run(self):
     df_train = pd.read_csv(self.filepath_train, sep=',')
@@ -83,7 +71,8 @@ class Variances:
         sorted_variances = variances.sort_values(ascending=False)
         print(f"sorted_variances: {sorted_variances}")
         total_variance = sorted_variances.sum()
-        num_components = self.select_features(sorted_variances, total_variance)
+        num_components, explained_variances = self.select_features(sorted_variances, total_variance)
+        self.plot_selected_variances(explained_variances, num_components)
         print(f"Number of components to explain 90% variance: {num_components} ou of {len(sorted_variances)}")
     except Exception as e:
       print(f"Error: {e}")
