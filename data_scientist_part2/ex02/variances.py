@@ -7,7 +7,7 @@ from scipy.stats import pointbiserialr
 import seaborn as sb
 from sklearn import preprocessing
 
-class Heatmap:
+class Variances:
   def __init__(self):
     self.conn = self.connect_to_postgres()
     self.cur = self.conn.cursor()
@@ -62,33 +62,34 @@ class Heatmap:
     print(f"clean_txt_file Array: {array}")
     return array
 
-  def compute_correlations(self, df, target='knight'):
-        correlations = {}
-        for col in df.columns:
-            if pd.api.types.is_numeric_dtype(df[col]):
-                corr, _ = pointbiserialr(df[col], df[target])
-                correlations[col] = corr
-        return sorted(correlations.items(), key=lambda x: abs(x[1]), reverse=True)
-
-  def plot_correlation_heatmap(self, df):
-    corr = df.corr()
-    sb.heatmap(corr, annot=False, cmap='coolwarm')
-    plt.title("Correlation Heatmap")
-    plt.show()
-    print("HEOEMAP")
+  def select_features(self, sorted_variances, total_variance):
+    explained = 0
+    num_components = 0
+    for var in sorted_variances:
+         explained += var
+         num_components += 1
+         print(f"Explained variance: {explained / total_variance:.2%}")
+         if explained / total_variance >= 0.9:
+             break
+    return num_components
 
   def run(self):
     df_train = pd.read_csv(self.filepath_train, sep=',')
 
     try:
         df_train['knight'] = df_train['knight'].map({'Sith': 1, 'Jedi': 0})
-        df_train_norm = self.normalize_df(df_train)
-        self.plot_correlation_heatmap(df_train_norm)
+        normalized_df_train = self.normalize_df(df_train)
+        variances = normalized_df_train.var()
+        sorted_variances = variances.sort_values(ascending=False)
+        print(f"sorted_variances: {sorted_variances}")
+        total_variance = sorted_variances.sum()
+        num_components = self.select_features(sorted_variances, total_variance)
+        print(f"Number of components to explain 90% variance: {num_components} ou of {len(sorted_variances)}")
     except Exception as e:
       print(f"Error: {e}")
 
 def main():
-  a = Heatmap()
+  a = Variances()
   a.run()
 
 if __name__ == "__main__":
