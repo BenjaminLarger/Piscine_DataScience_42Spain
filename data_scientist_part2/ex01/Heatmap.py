@@ -32,15 +32,6 @@ class Heatmap:
     df_normalized = pd.DataFrame(x_scaled, columns=df.columns)
     return df_normalized
 
-  
-  def clean_txt_file(self, filepath):
-    with open(filepath, "r") as file:
-        content = file.read()
-    array = content.split()
-    array = [1 if x == 'Jedi' else 0 for x in array]
-    print(f"clean_txt_file Array: {array}")
-    return array
-
   def compute_correlations(self, df, target='knight'):
         correlations = {}
         for col in df.columns:

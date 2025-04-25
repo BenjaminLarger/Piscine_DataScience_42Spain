@@ -52,8 +52,8 @@ class Normalization:
     print(f"df_train.head(): {df_train.head()}")
     train_df, val_df = self.split_training_data(df_train)
     # Save to csv files
-    train_df.to_csv(os.path.join(self.csv_dir, 'train_normalized.csv'), index=False)
-    val_df.to_csv(os.path.join(self.csv_dir, 'val_normalized.csv'), index=False)
+    train_df.to_csv(os.path.join(self.csv_dir, 'Training_knight.csv'), index=False)
+    val_df.to_csv(os.path.join(self.csv_dir, 'Validation_knight.csv'), index=False)
 
 def main():
   a = Normalization()

@@ -30,15 +30,6 @@ class Variances:
     df_normalized = pd.DataFrame(x_scaled, columns=df.columns)
     return df_normalized
 
-  
-  def clean_txt_file(self, filepath):
-    with open(filepath, "r") as file:
-        content = file.read()
-    array = content.split()
-    array = [1 if x == 'Jedi' else 0 for x in array]
-    print(f"clean_txt_file Array: {array}")
-    return array
-
   def select_features(self, sorted_variances, total_variance):
     explained = 0
     num_components = 0
