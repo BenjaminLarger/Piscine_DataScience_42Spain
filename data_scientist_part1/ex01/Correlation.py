@@ -52,7 +52,6 @@ class Histogram:
     df_train['knight'] = df_train['knight'].map({'Sith': 0, 'Jedi': 1})
     sorted_correlation = self.compute_correlations(df_train)
     self.print_correlation(sorted_correlation)
-
     self.close_connection()
 
 def main():

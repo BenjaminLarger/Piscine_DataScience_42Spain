@@ -72,6 +72,8 @@ class Normalization:
         df_test = pd.read_csv(filepath_test, sep=",")
         df_train = pd.read_csv(filepath_train, sep=",")
         df_train["knight"] = df_train["knight"].map({"Sith": 0, "Jedi": 1})
+        print(f"df_train.head(): {df_train.head()}")
+        print(f"df_test.head(): {df_test.head()}")
         df_train = self.normalize_df(df_train)
         df_test = self.normalize_df(df_test)
         print(f"df_train.head(): {df_train.head()}")
