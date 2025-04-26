@@ -56,7 +56,6 @@ class Normalization:
         train_df.to_csv(os.path.join(self.csv_dir, "Training_knight.csv"), index=False)
         val_df.to_csv(os.path.join(self.csv_dir, "Validation_knight.csv"), index=False)
 
-
 def main():
     a = Normalization()
     a.run()
