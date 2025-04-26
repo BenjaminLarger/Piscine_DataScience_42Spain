@@ -70,8 +70,6 @@ class Democracy:
         print('5-fold cross validation:\n')
         for clf, label in zip([clf1, clf2, clf3], labels):
             scores = model_selection.cross_val_score(clf, X_train, y_train, cv=5, scoring='f1_weighted')
-            print("Accuracy: %0.2f (+/- %0.2f) [%s]"
-             % (scores.mean(), scores.std(), label))
             
         # Create a Hard Voting Classifier
         voting_clf_hard = VotingClassifier(

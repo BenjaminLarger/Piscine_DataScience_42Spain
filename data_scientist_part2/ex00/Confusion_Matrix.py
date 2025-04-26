@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-
+import sys
 
 class ConfusionMatrix:
     def __init__(self):
@@ -14,8 +14,8 @@ class ConfusionMatrix:
             os.makedirs(self.csv_dir)
         self.filename_test = "Test_knight.csv"
         self.filename_train = "Train_knight.csv"
-        self.filename_prediction = "predictions.txt"
-        self.filename_truth = "truth.txt"
+        self.filename_prediction = sys.argv[1] if len(sys.argv) > 2 else "predictions.txt"
+        self.filename_truth = sys.argv[2] if len(sys.argv) > 2 else "truth.txt"
         self.strong_features = ["Empowered", "Prescience"]
         self.weak_features = ["Midi-chlorien", "Push"]
         self.filename_test = os.path.join(self.csv_dir, self.filename_test)
@@ -32,61 +32,22 @@ class ConfusionMatrix:
         array = content.split()
         # Replace Jedi with 1 and Sith with 0
         array = [1 if x == "Jedi" else 0 for x in array]
-        print(f"clean_txt_file Array: {array}")
         return array
 
     def confusion_matrix(self, true, pred):
         if len(true) != len(pred) or len(true) == 0:
             raise ValueError("Length mismatch")
-        print(f"True + Pred: {true + pred}")
         classes = set(true + pred)
-        print(f"Classes: {classes}")
         num_classes = len(classes)
         shape = (num_classes, num_classes)
-        print(f"Shape: {shape}")
         mat = np.zeros(shape)
-        print(f"Matrix: \n{mat}")
         n = max(len(true), len(pred))
-        print(f"n: {n}")
         for i in range(num_classes):
-            if i == 0:
-                print("####> Looking for Sith in TRUE array<####")
-            else:
-                print("####> Looking for Jedi in TRUE array <####")
             for j in range(num_classes):
-                if j == 0:
-                    print("====> Looking for Sith in PRED array <====")
-                else:
-                    print("====> Looking for Jedi in PRED array <====")
-                if i == j and i == 0:
-                    print("==============> True positive <==============")
-                elif i == j and i == 1:
-                    print("==============> True negative <==============")
-                elif i != j and i == 0:
-                    print("==============> False positive <==============")
-                elif i != j and i == 1:
-                    print("==============> False negative <==============")
                 for k in range(n):
                     if true[k] == i:
-                        if i == 0:
-                            print(f"The {k+1}th element of true {true[k]} is a Sith!")
-                        else:
-                            print(f"The {k+1}th element of true {true[k]} is a Jedi!")
                         if pred[k] == j:
                             mat[i][j] = mat[i][j] + 1
-                            if i == 0:
-                                print(
-                                    f"--> The {k+1}th element of pred {pred[k]} is a Sith!"
-                                )
-                            else:
-                                print(
-                                    f"--> The {k+1}th element of pred {pred[k]} is a Jedi!"
-                                )
-                            print(f"--> i = {i} and j = {j}")
-                            print(f"OOOO--> Matrice updated to \n{mat} OOOO")
-                        else:
-                            print("XXXX--> Matrice not updated! XXXX")
-        print(f"final Matrix: {mat}")
         return mat
 
     def plot_confusion_matrix(self, cm, classes, title="Confusion matrix"):
@@ -120,14 +81,30 @@ class ConfusionMatrix:
         df_train = pd.read_csv(self.filepath_train, sep=",")
         df_train["knight"] = df_train["knight"].map({"Sith": 0, "Jedi": 1})
         array_truth = self.clean_txt_file(self.filepath_truth)
-        print(f"Array truth: {array_truth}")
         array_pred = self.clean_txt_file(self.filepath_pred)
-        print(f"Array pred: {array_pred}")
-        print("--------------------------------")
+
         try:
             confusion_matrix = self.confusion_matrix(array_truth, array_pred)
             confusion_matrix = np.flip(confusion_matrix)
             self.plot_confusion_matrix(confusion_matrix, ["Jedi", "Sith"])
+            TP = confusion_matrix[0][0]
+            TN = confusion_matrix[1][1]
+            FP = confusion_matrix[0][1]
+            FN = confusion_matrix[1][0]
+
+            accuracy_jedi = (TP + TN) / (TP + TN + FP + FN)
+            precision_jedi = TP / (TP + FP)
+            precision_sith = TN / (TN + FN)
+            recall_jedi = TP / (TP + FN)
+            recall_sith = TN / (TN + FP)
+            f1_score_jedi = (2 * (precision_jedi * recall_jedi)) / (precision_jedi + recall_jedi)
+            f1_score_sith = 2 * (precision_sith * recall_sith) / (precision_sith + recall_sith)
+            total_jedi = confusion_matrix[0][0] + confusion_matrix[0][1]
+            total_sith = confusion_matrix[1][0] + confusion_matrix[1][1]
+            print(f"            precision   recall   f1_score     total")
+            print(f"Jedi:       {precision_jedi:.2f}        {recall_jedi:.2f}     {f1_score_jedi:.2f}          {total_jedi:.2f}")
+            print(f"Sith:       {precision_sith:.2f}        {recall_sith:.2f}     {f1_score_sith:.2f}          {total_sith:.2f}")
+            print(f"accuracy                         {accuracy_jedi:.2f}          {total_jedi+total_sith:.2f}")
             print(f"Confusion matrix: \n{confusion_matrix}")
         except Exception as e:
             print(f"Error: {e}")

@@ -47,11 +47,16 @@ class FeatureSelection:
             vif_df["VIF"] = [
                 variance_inflation_factor(X.values, i) for i in range(len(X.columns))
             ]
+            vif_df['Tolerance'] = 1 / vif_df["VIF"]
             print(f"VIF DataFrame: \n{vif_df}")
 
             # Keep only the features that the VIF is less than 5
             selected_features = vif_df[vif_df["VIF"] < 5]["features"].tolist()
             print(f"Selected features: {selected_features}")
+            # Drop line where features == "const"
+            vif_df = vif_df[vif_df["features"] != "const"]
+
+            print(vif_df.to_string(index=False))
         except Exception as e:
             print(f"Error: {e}")
 
