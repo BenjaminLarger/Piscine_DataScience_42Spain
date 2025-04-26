@@ -1,17 +1,17 @@
 import pandas as pd
 import os
 from sklearn import preprocessing
-from statsmodels.tools.tools import add_constant
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sklearn
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import confusion_matrix
 from sklearn.metrics import f1_score
+import sys
 
-class FeatureSelection:
+class Tree:
   def __init__(self):
     cur_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(cur_dir)
@@ -19,12 +19,12 @@ class FeatureSelection:
     self.table = 'items'
     if not os.path.exists(self.csv_dir):
         os.makedirs(self.csv_dir)
-    self.filename_training = "Training_knight.csv"
-    self.filename_test = "Validation_knight.csv"
-    self.main_filename = "Train_knight.csv"
+    self.filename_training = sys.argv[1] if len(sys.argv) > 2 else "Training_knight.csv"
+    self.filename_test = sys.argv[2] if len(sys.argv) > 2 else "Validation_knight.csv"
+    self.filename_output = "Tree.txt"
     self.filepath_training = os.path.join(self.csv_dir, self.filename_training)
-    self.filepath_main = os.path.join(self.csv_dir, self.main_filename)
     self.filepath_test = os.path.join(self.csv_dir, self.filename_test)
+    self.filepath_output = os.path.join(self.csv_dir, self.filename_output)
 
 
   def normalize_df(self, df):
@@ -53,7 +53,7 @@ class FeatureSelection:
         X_test = scaler.transform(X_test)
 
         # Building Random Forest Classifier
-        classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+        classifier = RandomForestClassifier(n_estimators=10, random_state=42)
         classifier.fit(X_train, y_train)
         y_pred = classifier.predict(X_test)
 
@@ -80,10 +80,19 @@ class FeatureSelection:
 
         # Display the tree graph
         cn = ['Sith', 'Jedi']
-        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(4, 4), dpi=800)
+        _, ax = plt.subplots(nrows=1, ncols=1, figsize=(3, 3), dpi=600)
         sklearn.tree.plot_tree(classifier.estimators_[0], feature_names=columns, class_names=cn, filled=True, ax=ax)
         plt.title('Decision Tree from Random Forest')
         plt.show()
+
+        # Wtrite the prediction in a Tree.txt file
+        with open(self.filepath_output, 'w') as f:
+            for pred in y_pred:
+                if pred == 0:
+                    f.write('Sith\n')
+                else:
+                    f.write('Jedi\n')
+
 
 
 
@@ -94,7 +103,7 @@ class FeatureSelection:
       print(f"Error: {e}")
 
 def main():
-  a = FeatureSelection()
+  a = Tree()
   a.run()
 
 if __name__ == "__main__":
