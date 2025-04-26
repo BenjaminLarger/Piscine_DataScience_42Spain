@@ -96,10 +96,10 @@ class Histogram:
       plt.show()
 
   def run(self):
-    filepath1 = os.path.join(self.csv_dir, self.filename_test)
-    filepath2 = os.path.join(self.csv_dir, self.filename_train)
-    df_test = pd.read_csv(filepath1, sep=',')
-    df_train = pd.read_csv(filepath2, sep=',')
+    filepath_test = os.path.join(self.csv_dir, self.filename_test)
+    filepath_train = os.path.join(self.csv_dir, self.filename_train)
+    df_test = pd.read_csv(filepath_test, sep=',')
+    df_train = pd.read_csv(filepath_train, sep=',')
     # Iterate through each column in the DataFrame
     self.plot_test_distribution(df_test)
     sith_df = df_train[df_train['knight'] == 'Sith']

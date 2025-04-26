@@ -47,8 +47,8 @@ class Histogram:
         print(f"{col}: {corr:.6f}")
 
   def run(self):
-    filepath2 = os.path.join(self.csv_dir, self.filename_train)
-    df_train = pd.read_csv(filepath2, sep=',')
+    filepath_train = os.path.join(self.csv_dir, self.filename_train)
+    df_train = pd.read_csv(filepath_train, sep=',')
     df_train['knight'] = df_train['knight'].map({'Sith': 0, 'Jedi': 1})
     sorted_correlation = self.compute_correlations(df_train)
     self.print_correlation(sorted_correlation)

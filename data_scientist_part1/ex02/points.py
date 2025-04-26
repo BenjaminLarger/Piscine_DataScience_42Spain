@@ -15,8 +15,8 @@ class Points:
         os.makedirs(self.csv_dir)
     self.filename_test = "Test_knight.csv"
     self.filename_train = "Train_knight.csv"
-    self.strong_features = ['Agility', 'Strength']
-    self.weak_features = ['Grasping', 'Burst']
+    self.strong_features = ['Empowered', 'Prescience']
+    self.weak_features = ['Midi-chlorien', 'Push']
 
   def connect_to_postgres(self):
     conn = psycopg2.connect(
@@ -64,10 +64,10 @@ class Points:
     plt.show()
 
   def run(self):
-    filepath1 = os.path.join(self.csv_dir, self.filename_test)
-    filepath2 = os.path.join(self.csv_dir, self.filename_train)
-    df_test = pd.read_csv(filepath1, sep=',')
-    df_train = pd.read_csv(filepath2, sep=',')
+    filepath_test = os.path.join(self.csv_dir, self.filename_test)
+    filepath_train = os.path.join(self.csv_dir, self.filename_train)
+    df_test = pd.read_csv(filepath_test, sep=',')
+    df_train = pd.read_csv(filepath_train, sep=',')
     self.plot_clusters_feature(df_train, self.strong_features)
     self.plot_clusters_feature(df_train, self.weak_features)
     self.plot_undifferentiated_knight(df_test, self.strong_features)

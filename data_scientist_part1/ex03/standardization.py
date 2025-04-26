@@ -2,80 +2,105 @@ import pandas as pd
 import os
 import psycopg2
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+
 
 class Standardization:
-  def __init__(self):
-    self.conn = self.connect_to_postgres()
-    self.cur = self.conn.cursor()
-    cur_dir = os.path.dirname(os.path.abspath(__file__))
-    parent_dir = os.path.dirname(cur_dir)
-    self.csv_dir = os.path.join(parent_dir, 'sources/')
-    self.table = 'items'
-    if not os.path.exists(self.csv_dir):
-        os.makedirs(self.csv_dir)
-    self.filename_test = "Test_knight.csv"
-    self.filename_train = "Train_knight.csv"
-    self.strong_features = ['Agility', 'Strength']
-    self.weak_features = ['Grasping', 'Burst']
+    def __init__(self):
+        self.conn = self.connect_to_postgres()
+        self.cur = self.conn.cursor()
+        cur_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(cur_dir)
+        self.csv_dir = os.path.join(parent_dir, "sources/")
+        self.table = "items"
+        if not os.path.exists(self.csv_dir):
+            os.makedirs(self.csv_dir)
+        self.filename_test = "Test_knight.csv"
+        self.filename_train = "Train_knight.csv"
+        self.strong_features = ["Empowered", "Prescience"]
+        self.weak_features = ["Midi-chlorien", "Push"]
 
-  def connect_to_postgres(self):
-    conn = psycopg2.connect(
-        host=os.getenv("PGHOST", "localhost"),
-        dbname=os.getenv("POSTGRES_DB", "piscineds"),
-        user=os.getenv("POSTGRES_USER", "blarger"),
-        password=os.getenv("POSTGRES_PASSWORD", "mysecretpassword"),
-        port=5432
-    )
-    return conn
-  
-  def close_connection(self):
-    if self.cur:
-        self.cur.close()
-    if self.conn:
-        self.conn.close()
-    print("PostgreSQL connection closed.")
+    def connect_to_postgres(self):
+        conn = psycopg2.connect(
+            host=os.getenv("PGHOST", "localhost"),
+            dbname=os.getenv("POSTGRES_DB", "piscineds"),
+            user=os.getenv("POSTGRES_USER", "blarger"),
+            password=os.getenv("POSTGRES_PASSWORD", "mysecretpassword"),
+            port=5432,
+        )
+        return conn
 
+    def close_connection(self):
+        if self.cur:
+            self.cur.close()
+        if self.conn:
+            self.conn.close()
+        print("PostgreSQL connection closed.")
 
-  def plot_clusters_feature(self, df, features):
-    df_jedi = df[(df['knight'] == 'Jedi')]
-    xpoints_jedi = df_jedi[features[0]].values
-    ypoints_jedi = df_jedi[features[1]].values
-    plt.plot(xpoints_jedi, ypoints_jedi, 'o', label='Jedi', color="lightblue")
+    def plot_clusters_feature(self, df, features):
+        df_jedi = df[(df["knight"] == "Jedi")]
+        xpoints_jedi = df_jedi[features[0]].values
+        ypoints_jedi = df_jedi[features[1]].values
+        plt.plot(xpoints_jedi, ypoints_jedi, "o", label="Jedi", color="lightblue")
 
-    df_sith = df[(df['knight'] == 'Sith')]
-    xpoints_sith = df_sith[features[0]].values
-    ypoints_sith = df_sith[features[1]].values
-    plt.plot(xpoints_sith, ypoints_sith, 'o', label='Sith', color='lightcoral')
+        df_sith = df[(df["knight"] == "Sith")]
+        xpoints_sith = df_sith[features[0]].values
+        ypoints_sith = df_sith[features[1]].values
+        plt.plot(xpoints_sith, ypoints_sith, "o", label="Sith", color="lightcoral")
 
-    plt.xlabel(features[0])
-    plt.ylabel(features[1])
-    plt.title('Clusters of Jedi and Sith')
-    plt.legend()
-    plt.show()
+        plt.xlabel(features[0])
+        plt.ylabel(features[1])
+        plt.title("Clusters of Jedi and Sith")
+        plt.legend()
+        plt.show()
 
-  def plot_undifferentiated_knight(self, df, features):
-    xpoints = df[features[0]].values
-    ypoints = df[features[1]].values
-    plt.plot(xpoints, ypoints, 'o', label='Knight', color='lightgreen')
-    plt.xlabel(features[0])
-    plt.ylabel(features[1])
-    plt.title('Undifferentiated Clusters')
-    plt.legend()
-    plt.show()
+    def plot_undifferentiated_knight(self, df, features):
+        xpoints = df[features[0]].values
+        ypoints = df[features[1]].values
+        plt.plot(xpoints, ypoints, "o", label="Knight", color="lightgreen")
+        plt.xlabel(features[0])
+        plt.ylabel(features[1])
+        plt.title("Undifferentiated Clusters")
+        plt.legend()
+        plt.show()
 
-  def run(self):
-    filepath1 = os.path.join(self.csv_dir, self.filename_test)
-    filepath2 = os.path.join(self.csv_dir, self.filename_train)
-    df_test = pd.read_csv(filepath1, sep=',')
-    df_train = pd.read_csv(filepath2, sep=',')
-    self.plot_clusters_feature(df_train, self.strong_features)
-    self.plot_clusters_feature(df_train, self.weak_features)
-    self.plot_undifferentiated_knight(df_test, self.strong_features)
-    self.plot_undifferentiated_knight(df_test, self.weak_features)
+    def run(self):
+        filepath_test = os.path.join(self.csv_dir, self.filename_test)
+        filepath_train = os.path.join(self.csv_dir, self.filename_train)
+        df_train = pd.read_csv(filepath_train, sep=",")
+        df_test = pd.read_csv(filepath_test, sep=",")
+        print(f"df_train head:\n {df_train.head()}")
+        print(f"df_test head:\n {df_test.head()}")
+        # Store column names for later
+        train_columns = df_train.columns.drop("knight")
+
+        # Extract knight labels before standardization
+        knight_train = df_train["knight"]
+
+        # Standardize features
+        scaler = StandardScaler()
+
+        # Fit the scaler on training data and transform both datasets
+        X_train_scaled = scaler.fit_transform(df_train.drop(columns=["knight"]))
+        X_test_scaled = scaler.fit_transform(df_test)
+
+        # Convert back to dataframes with proper column names
+        df_train_scaled = pd.DataFrame(X_train_scaled, columns=train_columns)
+        df_test_scaled = pd.DataFrame(X_test_scaled, columns=train_columns)
+
+        # Add knight column back to training data
+        df_train_scaled["knight"] = knight_train
+
+        print(f"df_train_scaled head:\n {df_train_scaled.head()}")
+        print(f"df_test_scaled head:\n {df_test_scaled.head()}")
+
+        self.plot_clusters_feature(df_train_scaled, self.strong_features)
+
 
 def main():
-  a = Standardization()
-  a.run()
+    a = Standardization()
+    a.run()
+
 
 if __name__ == "__main__":
-  main()
+    main()
