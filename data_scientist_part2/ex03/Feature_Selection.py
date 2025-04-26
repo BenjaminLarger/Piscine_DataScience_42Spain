@@ -31,17 +31,6 @@ class FeatureSelection:
     df_normalized = pd.DataFrame(x_scaled, columns=df.columns)
     return df_normalized
 
-  def select_features(self, sorted_variances, total_variance):
-    explained = 0
-    num_components = 0
-    explained_variances = []
-    for var in sorted_variances:
-         explained += var
-         num_components += 1
-         explained_variances.append(explained / total_variance)
-         print(f"Explained variance: {explained / total_variance:.2%}")
-    return num_components, explained_variances
-
   def run(self):
     try:
         df_train = pd.read_csv(self.filepath_train, sep=',')

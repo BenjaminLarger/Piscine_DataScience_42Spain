@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score
 import sys
 from sklearn.neighbors import KNeighborsClassifier
+from statsmodels.tools.tools import add_constant
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 class KNN:
   def __init__(self):
@@ -30,15 +32,32 @@ class KNN:
     df_normalized = pd.DataFrame(x_scaled, columns=df.columns)
     return df_normalized
 
+  def select_features(self, df):
+    X = df.drop(columns=['knight'])
+    X = add_constant(X)
+    vif_df = pd.DataFrame()
+    vif_df['features'] = X.columns
+    vif_df['VIF'] = [variance_inflation_factor(X.values, i)
+                            for i in range(len(X.columns))]
+    print(f"VIF DataFrame: \n{vif_df}")
+    return vif_df[vif_df['VIF'] < 50]['features'].tolist()
+
   def run(self):
     try:
         # Data Preparation
         # Splitting the Dataset
         df_training = pd.read_csv(self.filepath_training, sep=',')
+        df_training = self.normalize_df(df_training)
+        #print(f"fd training columns = {df_training.columns}")
+        selected_features = self.select_features(df_training)
+        print(f"----> selected_features = {selected_features}")
+        df_training = df_training[selected_features + ['knight']]
         X_train = df_training.drop(columns=['knight'])
         y_train = df_training['knight']
 
         df_test = pd.read_csv(self.filepath_test, sep=',')
+        df_test = self.normalize_df(df_training)
+        df_test = df_test[selected_features + ['knight']]
         X_test = df_test.drop(columns=['knight'])
         y_test = df_test['knight']
 
