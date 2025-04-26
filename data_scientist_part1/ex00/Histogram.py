@@ -41,18 +41,18 @@ class Histogram:
       if n == 0:
           print("No numeric columns to plot.")
           return
-      fig, axes = plt.subplots(5, 6, figsize=(5 * 5, 4 * 6))
+      fig, axes = plt.subplots(5, 6, figsize=(3 * 3, 2.5 * 3))  # Reduced subplot size
       axes = axes.flatten()
 
       for i, col in enumerate(numeric_cols):
           data = df[col].dropna()
-          bin_edges = np.histogram_bin_edges(data, bins='auto')
+          bin_edges = np.histogram_bin_edges(data, bins='doane')
           hist, edges = np.histogram(data, bins=bin_edges)
 
           bin_centers = 0.5 * (edges[1:] + edges[:-1])
-          axes[i].bar(bin_centers, hist, width=(edges[1] - edges[0]), align='center', color="lightgreen", label="Knight")
+          axes[i].bar(bin_centers, hist, width=((edges[1] - edges[0]) * 0.5), align='center', color="lightgreen", label="Knight")
           axes[i].set_title(col)
-          axes[i].legend()
+          axes[i].legend(fontsize=5)
 
       # Hide unused subplots
       for j in range(i + 1, len(axes)):
@@ -71,7 +71,7 @@ class Histogram:
       if n_test == 0 or n_train == 0 or n_test != n_train:
           print("No numeric columns to plot, or dataframes have different numeric columns.")
           return
-      fig, axes = plt.subplots(5, 6, figsize=(5 * 5, 4 * 6))
+      fig, axes = plt.subplots(5, 6, figsize=(3 * 3, 2.5 * 3))
       axes = axes.flatten()
 
       for i, col in enumerate(numeric_cols_test):
@@ -86,7 +86,7 @@ class Histogram:
           axes[i].bar(bin_centers_test, hist_test, width=(edges_test[1] - edges_test[0]), align='center', color="lightcoral", label="Jedi")
           axes[i].bar(bin_centers_train, hist_train, width=(edges_train[1] - edges_train[0]), align='center', color="lightblue", alpha=0.5, label="Sith")
           axes[i].set_title(col)
-          axes[i].legend()
+          axes[i].legend(fontsize=5)
 
       # Hide unused subplots
       for j in range(i + 1, len(axes)):
@@ -102,7 +102,9 @@ class Histogram:
     df_train = pd.read_csv(filepath2, sep=',')
     # Iterate through each column in the DataFrame
     self.plot_test_distribution(df_test)
-    self.plot_test_and_train_distribution(df_test, df_train)
+    sith_df = df_train[df_train['knight'] == 'Sith']
+    jedi_df = df_train[df_train['knight'] == 'Jedi']
+    self.plot_test_and_train_distribution(sith_df, jedi_df)
     self.close_connection()
 
 def main():

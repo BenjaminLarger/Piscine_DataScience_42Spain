@@ -92,12 +92,6 @@ class Tree:
                     f.write('Sith\n')
                 else:
                     f.write('Jedi\n')
-
-
-
-
-
-
         
     except Exception as e:
       print(f"Error: {e}")
