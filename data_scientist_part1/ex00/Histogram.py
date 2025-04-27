@@ -6,8 +6,6 @@ import numpy as np
 
 class Histogram:
   def __init__(self):
-    self.conn = self.connect_to_postgres()
-    self.cur = self.conn.cursor()
     cur_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(cur_dir)
     self.csv_dir = os.path.join(parent_dir, 'sources/')
@@ -26,13 +24,7 @@ class Histogram:
         port=5432
     )
     return conn
-  
-  def close_connection(self):
-    if self.cur:
-        self.cur.close()
-    if self.conn:
-        self.conn.close()
-    print("PostgreSQL connection closed.")
+
 
   def plot_test_distribution(self, df):
       numeric_cols = [col for col in df.columns if pd.api.types.is_numeric_dtype(df[col])]
@@ -105,7 +97,6 @@ class Histogram:
     sith_df = df_train[df_train['knight'] == 'Sith']
     jedi_df = df_train[df_train['knight'] == 'Jedi']
     self.plot_test_and_train_distribution(sith_df, jedi_df)
-    self.close_connection()
 
 def main():
   a = Histogram()

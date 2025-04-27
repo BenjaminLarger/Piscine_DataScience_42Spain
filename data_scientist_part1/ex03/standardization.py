@@ -7,8 +7,6 @@ from sklearn.preprocessing import StandardScaler
 
 class Standardization:
     def __init__(self):
-        self.conn = self.connect_to_postgres()
-        self.cur = self.conn.cursor()
         cur_dir = os.path.dirname(os.path.abspath(__file__))
         parent_dir = os.path.dirname(cur_dir)
         self.csv_dir = os.path.join(parent_dir, "sources/")
@@ -29,13 +27,6 @@ class Standardization:
             port=5432,
         )
         return conn
-
-    def close_connection(self):
-        if self.cur:
-            self.cur.close()
-        if self.conn:
-            self.conn.close()
-        print("PostgreSQL connection closed.")
 
     def plot_clusters_feature(self, df, features):
         df_jedi = df[(df["knight"] == "Jedi")]

@@ -5,8 +5,6 @@ import psycopg2
 
 class Histogram:
   def __init__(self):
-    self.conn = self.connect_to_postgres()
-    self.cur = self.conn.cursor()
     cur_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(cur_dir)
     print(f"Parent directory: {parent_dir}")
@@ -25,13 +23,6 @@ class Histogram:
         port=5432
     )
     return conn
-  
-  def close_connection(self):
-    if self.cur:
-        self.cur.close()
-    if self.conn:
-        self.conn.close()
-    print("PostgreSQL connection closed.")
   
   def compute_correlations(self, df, target='knight'):
       correlations = {}
@@ -52,7 +43,6 @@ class Histogram:
     df_train['knight'] = df_train['knight'].map({'Sith': 0, 'Jedi': 1})
     sorted_correlation = self.compute_correlations(df_train)
     self.print_correlation(sorted_correlation)
-    self.close_connection()
 
 def main():
   a = Histogram()
